@@ -19,7 +19,7 @@ test_size = 15
 np.random.seed(RANDOM_SEED)
 tf.random.set_seed(RANDOM_SEED)
 
-def Train(csv_train,csv_test,csv_output):
+def Train(csv_train,csv_test):
     global X_test
     global cnt_transformer
     global y_train
@@ -193,7 +193,7 @@ if __name__ == '__main__':
     # The following part is an example.
     # You can modify it at will.
     
-    #Train(args.training,args.testing,args.output)
+    Train(args.training,args.testing)
     Test(args.testing,"Future.csv",args.output)
 
     
