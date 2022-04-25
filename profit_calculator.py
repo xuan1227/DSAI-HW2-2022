@@ -122,4 +122,4 @@ if __name__ == "__main__":
     
     profit = calculate_profit(stocks_df, actions)
     print("Profit "+str(profit))
-    print("Max Profit: "+str(max(stocks_df['open'].values)-min(stocks_df['open'].values)))
+    print("Max Profit: "+str(max(stocks_df['close'].values)-min(stocks_df['close'].values)))
