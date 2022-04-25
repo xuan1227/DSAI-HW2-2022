@@ -19,7 +19,7 @@ test_size = 15
 np.random.seed(RANDOM_SEED)
 tf.random.set_seed(RANDOM_SEED)
 
-def Train(csv_train,csv_test):
+def Train_and_Test(csv_train,csv_test,csv_output):
     global X_test
     global cnt_transformer
     global y_train
@@ -78,30 +78,56 @@ def Train(csv_train,csv_test):
     x_pred = X[-1:, :, :]  # last observed input sequence
     y_pred = Y[-1]         # last observed target value
 
-    output = []
+    output = open(csv_output,"w")
+    stage = 0
     for i in range(n_future):
 
         # feed the last forecast back to the model as an input
         x_pred = np.append(x_pred[:, 1:, :], y_pred.reshape(1, 1, 1), axis=1)
-        print(x_pred[:, 1:, :])
+        
         # generate the next forecast
         y_pred = model.predict(x_pred)
-
+        
         # save the forecast
         y_future.append(y_pred.flatten()[0])
 
         y_pred = np.array(y_pred).reshape(-1, 1)
 
         y_pred = scaler.inverse_transform(y_pred)
-
+        
+        
+        if i < n_future-1:
+            predict_value = y_pred[0][0]
+            real_value = df2['Open'].values[i]
+            if(predict_value>real_value and stage == 0):
+                output.write("1\n")
+                stage=1
+            elif(predict_value>real_value and stage == 1):
+                output.write("0\n")
+                stage=1
+            elif(predict_value>real_value and stage == -1):
+                output.write("1\n")
+                stage=0
+            elif(predict_value<real_value and stage == 0):
+                output.write("-1\n")
+                stage=-1
+            elif(predict_value<real_value and stage == 1):
+                output.write("-1\n")
+                stage=0
+            elif(predict_value<real_value and stage == -1):
+                output.write("0\n")
+                stage = -1
+            else:
+                output.write("0\n")
+                stage = 0
         # read the true price
         y_pred = y2[i]
-
-    
+        
     # transform the forecasts back to the original scale
     y_future = np.array(y_future).reshape(-1, 1)
+    
     y_future = scaler.inverse_transform(y_future)
-
+    
     # organize the results in a data frame
     df_past = df[['Open']].reset_index()
     df_past.rename(columns={'index': 'Date'}, inplace=True)
@@ -137,40 +163,7 @@ def Train(csv_train,csv_test):
     # plt.legend()
     # plt.show()
 
-def Test(file_test,file_input,file_output):
-    test = pd.read_csv(file_test,header=None)
-    output = open(file_output,"w")
-    input = open(file_input,"r")
-    test = test.iloc[:,0]
-    input_list = []
-    test_list = []
-    stage = 0
-    for i in test:
-        test_list.append(float(i))
-    for i in input.readlines():
-        input_list.append(float(i))
-    for i in range(len(input_list)-1):
-        if(input_list[i]>test_list[i] and stage == 0):
-            output.write("1\n")
-            stage=1
-        elif(input_list[i]>test_list[i] and stage == 1):
-            output.write("0\n")
-            stage=1
-        elif(input_list[i]>test_list[i] and stage == -1):
-            output.write("1\n")
-            stage=0
-        elif(input_list[i]<test_list[i] and stage == 0):
-            output.write("-1\n")
-            stage=-1
-        elif(input_list[i]<test_list[i] and stage == 1):
-            output.write("-1\n")
-            stage=0
-        elif(input_list[i]<test_list[i] and stage == -1):
-            output.write("0\n")
-            stage = -1
-        else:
-            output.write("0\n")
-            stage = 0
+
 # You can write code above the if-main block.
 if __name__ == '__main__':
     # You should not modify this part, but additional arguments are allowed.
@@ -193,8 +186,8 @@ if __name__ == '__main__':
     # The following part is an example.
     # You can modify it at will.
     
-    Train(args.training,args.testing)
-    Test(args.testing,"Future.csv",args.output)
+    Train_and_Test(args.training,args.testing,args.output)
+    #Test(args.testing,"Future.csv",args.output)
 
     
 

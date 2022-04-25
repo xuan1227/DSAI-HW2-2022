@@ -119,5 +119,7 @@ if __name__ == "__main__":
     if not check_stock_actions_length(stocks_df, actions):
         raise InvalidActionNumError('Invalid number of actions')
 
+    
     profit = calculate_profit(stocks_df, actions)
-    print(profit)
+    print("Profit "+str(profit))
+    print("Max Profit: "+str(max(stocks_df['open'].values)-min(stocks_df['open'].values)))
