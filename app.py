@@ -34,9 +34,9 @@ def Train_and_Test(csv_train,csv_test,csv_output):
     f_columns = ['Open', 'High', 'Low','Close']
     #df.loc[:,f_columns]*=100
     #df2.loc[:,f_columns]*=100
-
-    y = df['Close'].values.reshape(- 1, 1)
-    y2 = df2['Close'].values.reshape(- 1, 1)
+    column_to_use='High'
+    y = df[column_to_use].values.reshape(- 1, 1)
+    y2 = df2[column_to_use].values.reshape(- 1, 1)
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaler2 = MinMaxScaler(feature_range=(0, 1))
     scaler = scaler.fit(y)
@@ -98,7 +98,7 @@ def Train_and_Test(csv_train,csv_test,csv_output):
         
         if i < n_future-1:
             predict_value = y_pred[0][0]
-            real_value = df2['Close'].values[i]
+            real_value = df2[column_to_use].values[i]
             if(predict_value>real_value and stage == 0):
                 output.write("1\n")
                 stage=1
@@ -129,16 +129,16 @@ def Train_and_Test(csv_train,csv_test,csv_output):
     y_future = scaler.inverse_transform(y_future)
     
     # organize the results in a data frame
-    df_past = df[['Close']].reset_index()
+    df_past = df[[column_to_use]].reset_index()
     df_past.rename(columns={'index': 'Date'}, inplace=True)
     df_past['Date'] = pd.to_datetime(df_past['Date'])
     df_past['Forecast'] = np.nan
 
 
-    df_future = pd.DataFrame(columns=['Date', 'Close', 'Forecast'])
+    df_future = pd.DataFrame(columns=['Date', column_to_use, 'Forecast'])
     df_future['Date'] = pd.date_range(start=df_past['Date'].iloc[-1] + pd.Timedelta(days=1), periods=n_future)
     df_future['Forecast'] = y_future.flatten()
-    df_future['Close'] = np.nan
+    df_future[column_to_use] = np.nan
 
     results = df_past.append(df_future).set_index('Date')
     past, future = results.iloc[0:len(df)], results.iloc[len(df):len(results)]
@@ -152,11 +152,11 @@ def Train_and_Test(csv_train,csv_test,csv_output):
     f= open("Future.csv","w")
     f.writelines(lines[1:])
     # plot the results
-    history = past['Close']
+    history = past[column_to_use]
     predict = future['Forecast']
     f.close()
     plt.plot(np.arange(0, len(past)), history, 'g', label="history")
-    plt.plot(np.arange(len(past), len(past) + len(future)), df2['Close'], marker='.', label="true")
+    plt.plot(np.arange(len(past), len(past) + len(future)), df2[column_to_use], marker='.', label="true")
     plt.plot(np.arange(len(past), len(past) + len(future)), predict, 'r', label="prediction")
     plt.ylabel('Price')
     plt.xlabel('Day')
